@@ -1,7 +1,17 @@
-import { Controller, Post, Body, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpStatus,
+  Get,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { ResponseFormat } from '../../interface/response.interface';
 import { User } from '../../users/repository/user.entity';
+import { JwtAuthGuard } from '../guards/auth.guard';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -21,9 +31,16 @@ export class AuthController {
 
   @Post('register')
   async register(
-    @Body() body: { email: string; password: string; role: string }
+    @Body()
+    body: {
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    }
   ): Promise<ResponseFormat<User>> {
     const user = await this.authService.register(
+      body.name,
       body.email,
       body.password,
       body.role
@@ -42,6 +59,16 @@ export class AuthController {
       status: HttpStatus.OK,
       message: 'Logged out successfully',
       data: null,
+    };
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@Req() req: Request): ResponseFormat<User> {
+    return {
+      status: HttpStatus.OK,
+      message: 'User profile retrieved successfully',
+      data: req.user as User, // Data user yang didapat dari token JWT
     };
   }
 }

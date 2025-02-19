@@ -48,9 +48,16 @@ export class UserController {
   @Roles('admin')
   @Post()
   async createUser(
-    @Body() body: { email: string; password: string; role: string }
+    @Body()
+    body: {
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+    }
   ): Promise<ResponseFormat<User>> {
     const user = await this.userService.createUser(
+      body.name,
       body.email,
       body.password,
       body.role

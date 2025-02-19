@@ -24,13 +24,18 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  async register(email: string, password: string, role: string): Promise<User> {
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    role: string
+  ): Promise<User> {
     const existingUser = await this.userService.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('Email is already registered');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    return this.userService.createUser(email, hashedPassword, role);
+    return this.userService.createUser(name, email, hashedPassword, role);
   }
 
   logout(): void {

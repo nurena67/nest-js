@@ -12,13 +12,15 @@ export class UserService {
   ) {}
 
   async getAllUsers(): Promise<User[]> {
-    return this.userRepository.find({ select: ['id', 'email', 'role'] });
+    return this.userRepository.find({
+      select: ['id', 'name', 'email', 'role'],
+    });
   }
 
   async getUserById(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'role'],
+      select: ['id', 'name', 'email', 'role'],
     });
 
     if (!user) {
@@ -28,7 +30,12 @@ export class UserService {
     return user;
   }
 
-  async createUser(email: string, password: string, role: string) {
+  async createUser(
+    name: string,
+    email: string,
+    password: string,
+    role: string
+  ) {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
       throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
@@ -37,6 +44,7 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.userRepository.create({
+      name,
       email,
       password: hashedPassword,
       role,

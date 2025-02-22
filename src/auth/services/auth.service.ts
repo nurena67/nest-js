@@ -16,6 +16,13 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string): Promise<string> {
+    console.log('Email yang diterima:', email);
+    console.log('Password yang diterima:', password);
+
+    if (!email || !password) {
+      throw new UnauthorizedException('Email dan password harus diisi');
+    }
+
     const user = await this.userService.validateUser(email, password);
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
@@ -34,7 +41,9 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException('Email is already registered');
     }
+    console.log('Password sebelum hashing:', password);
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('Password setelah hashing:', hashedPassword);
     return this.userService.createUser(name, email, hashedPassword, role);
   }
 

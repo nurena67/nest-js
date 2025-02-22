@@ -1,5 +1,10 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../repository/user.entity';
@@ -33,15 +38,13 @@ export class UserService {
   async createUser(
     name: string,
     email: string,
-    password: string,
+    hashedPassword: string,
     role: string
   ) {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
       throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.userRepository.create({
       name,
@@ -66,11 +69,26 @@ export class UserService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async validateUser(email: string, password: string) {
-    const user = await this.findByEmail(email);
+  async validateUser(email: string, password: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    console.log('User ditemukan:', user);
+
     if (!user) return null;
 
+    console.log('Password dari request:', password);
+    console.log('Password hash di database:', user.password);
+
+    if (!password || !user.password) {
+      throw new UnauthorizedException('Password tidak valid');
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    return isPasswordValid ? user : null;
+
+    console.log('Password valid:', isPasswordValid);
+
+    if (!isPasswordValid) return null;
+
+    return user;
   }
 }
